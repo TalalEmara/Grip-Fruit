@@ -14,7 +14,7 @@ class Renderer:
     def drawBackground(self, width , height):
         # self.screen.fill(self.colors[0])
         # Or if using an image:
-        background = pygame.image.load("assets\images\Background.png").convert()
+        background = pygame.image.load("..\\assets\images\Background.png").convert()
         background = pygame.transform.scale(background, (width,height))
         self.screen.blit(background, (0, 0))
     def drawItems(self, items):
@@ -32,7 +32,11 @@ class Renderer:
         The master method.
         """
         self.drawBackground(width=width, height=height)
-        # self.draw_entities(hand, active_items)
+        if hand:
+            hand.draw(self.screen)
+        if active_items:
+            active_items.draw(self.screen)
+        
         self.drawUi(score)
         
         pygame.display.flip()

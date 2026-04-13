@@ -8,9 +8,9 @@ FRESH_FRUIT, ROTTEN_FRUIT, KETCHUP = "fresh_fruit", "rotten_fruit", "ketchup"
 POINTS = {FRESH_FRUIT: 10, ROTTEN_FRUIT: -10, KETCHUP: -5}
 
 STILL_IMAGE_PATHS = {
-    FRESH_FRUIT:  r"E:\pygame\Grip-Fruit\src\assets\images\lemon.png",
-    ROTTEN_FRUIT: r"E:\pygame\Grip-Fruit\src\assets\images\lemon rotten.png",
-    KETCHUP:      r"E:\pygame\Grip-Fruit\src\assets\images\ketchup.png",
+    FRESH_FRUIT:  r"assets\images\lemon.png",
+    ROTTEN_FRUIT: r"assets\images\lemon rotten.png",
+    KETCHUP:      r"assets\images\ketchup.png",
 }
 
 ITEM_SIZE = 150

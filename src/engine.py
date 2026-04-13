@@ -1,4 +1,5 @@
 import pygame
+from item import STILL_IMAGE_PATHS, FruitItem, FRESH_FRUIT, ITEM_SIZE
 from renderer import Renderer
 from scoreManger import ScoreManager
 
@@ -21,12 +22,24 @@ def initialize(width, height):
     return renderer, clock, score_manager
 
 
+def create_dummy_item(screen_w, screen_h):
+    # Temporary placeholder image until real assets/pipeline are wired.
+    img_data = {name: pygame.image.load(path).convert_alpha() for name, path in STILL_IMAGE_PATHS.items()}
+    
+    dummy_surface = pygame.Surface((ITEM_SIZE, ITEM_SIZE), pygame.SRCALPHA)
+    dummy_surface.fill((255, 220, 80))
+    hand_y = screen_h - 120
+    return FruitItem(FRESH_FRUIT, img_data[FRESH_FRUIT], screen_w, hand_y, ITEM_SIZE)
+
+
 if __name__ == "__main__":
     settings = config()
 
     
     renderer, clock, score_manager = initialize(settings["width"],settings["height"])
     running = True
+    
+    currentItem = create_dummy_item(settings["width"], settings["height"])
     
     # Game loop
     while running:
@@ -39,18 +52,23 @@ if __name__ == "__main__":
                 squeeze_triggered = True
         
         if squeeze_triggered:
-            # TODO: Get actual game state (e.g., is current_item fresh_fruit?)
-            is_correct_target = True 
-            
-            # TODO: Pull this from compensationDetection.py
-            compensation_detected = False 
-            
-            result = score_manager.process_grip(is_correct_target, compensation_detected)
-            
+            if currentItem and currentItem.is_on_screen and not currentItem.is_being_squeezed:                
+                currentItem.squeeze()
+
+                compensation_detected = False
+                result = score_manager.process_grip(currentItem.fruit_type == FRESH_FRUIT, compensation_detected)
+                
+                
 
             # Note: You also need to trigger the hand.start_squeezing() animation here!
-        
-        renderer.render_frame(width=settings["width"],height=settings["height"], score=score_manager.total_score)
+        currentItem.update_fruit()
+
+        renderer.render_frame(
+            width=settings["width"],
+            height=settings["height"],
+            score=score_manager.total_score,
+            active_items=currentItem,
+        )
         clock.tick(settings["fps"])
     
     pygame.quit()
