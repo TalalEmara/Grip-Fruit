@@ -8,9 +8,9 @@ FRESH_FRUIT, ROTTEN_FRUIT, KETCHUP = "fresh_fruit", "rotten_fruit", "ketchup"
 POINTS = {FRESH_FRUIT: 10, ROTTEN_FRUIT: -10, KETCHUP: -5}
 
 STILL_IMAGE_PATHS = {
-    FRESH_FRUIT:  r"assets\images\lemon.png",
-    ROTTEN_FRUIT: r"assets\images\lemon rotten.png",
-    KETCHUP:      r"assets\images\ketchup.png",
+    FRESH_FRUIT:  r"src\assets\images\lemon.png",
+    ROTTEN_FRUIT: r"src\assets\images\lemon rotten.png",
+    KETCHUP:      r"src\assets\images\ketchup.png",
 }
 
 ITEM_SIZE = 150
@@ -36,14 +36,14 @@ class FruitItem:
         self.is_being_squeezed = True
         return self.points
 
-    def update_fruit(self):
-        if not self.is_on_screen: 
+    def update_fruit(self, timeout=100):   # <-- add param
+        if not self.is_on_screen:
             return
         if self.is_being_squeezed:
             self.is_on_screen = False
         else:
             self.timer += 1
-            if self.timer >= 100:
+            if self.timer >= timeout:      # <-- use it here
                 self.is_on_screen = False
 
     def draw(self, screen):

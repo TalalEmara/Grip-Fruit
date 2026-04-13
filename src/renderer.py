@@ -14,7 +14,7 @@ class Renderer:
     def drawBackground(self, width , height):
         # self.screen.fill(self.colors[0])
         # Or if using an image:
-        background = pygame.image.load("..\\assets\images\Background.png").convert()
+        background = pygame.image.load("assets\images\Background.png").convert()
         background = pygame.transform.scale(background, (width,height))
         self.screen.blit(background, (0, 0))
     def drawItems(self, items):
