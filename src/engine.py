@@ -25,6 +25,7 @@ def initialize(width, height):
 
     level = make_challenge_level()
     level.start()
+    renderer._start_ticks = pygame.time.get_ticks()
     hand_y = height - 120
     fruit_rect = pygame.Rect((settings["width"] - ITEM_SIZE) // 2, hand_y - ITEM_SIZE, ITEM_SIZE, ITEM_SIZE)
     hand = Hand(width, height, fruit_rect)
@@ -72,16 +73,20 @@ if __name__ == "__main__":
                     # for testing, randomize the popup type. Replace with actual result in real game.
                     popup_type=choice(["perfect", "good", "motivate", "penalty"]),
                 )
-
+        
+        if currentItem:
+            currentItem.update_fruit(timeout=level.get_item_timeout())
+        
         shouldSpawn = level.update(currentItem)
+
+        if currentItem and not currentItem.is_on_screen:
+            currentItem = None          # clear slot after level.update() counts it
+        
+        
         if shouldSpawn:
             itemType = level.next_item_type()
             currentItem = FruitItem(itemType, img_data[itemType], settings["width"], hand_y, ITEM_SIZE)
 
-        if currentItem:
-            currentItem.update_fruit(timeout=level.get_item_timeout())
-            if not currentItem.is_on_screen:
-                currentItem = None          # clear slot → level.update() counts it and starts spawn timer
         hand.update_hand()
         renderer.render_frame(
             width=settings["width"],
@@ -89,6 +94,7 @@ if __name__ == "__main__":
             score=score_manager.total_score,
             active_items=currentItem,
             hand=hand,
+            level=level,
         )
     clock.tick(settings["fps"])
     pygame.quit()

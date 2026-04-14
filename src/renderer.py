@@ -51,13 +51,13 @@ class Renderer:
         pygame.display.set_caption("Grip Fruit")
 
         self.colors = [(40,200,155),(0,0,0),(0,0,50)]
-        self.font_score = pygame.font.SysFont("impact", 58)
-        self.font_label = pygame.font.SysFont("arial",  16, bold=True)
+        self.font_score = pygame.font.SysFont("impact", 40)
+        self.font_label = pygame.font.SysFont("arial",  12, bold=True)
         self.font_popup = pygame.font.SysFont("arial", 32, bold=True)
         
         self._popups = []   # list of [x, y, text, type, frames_left]
 
-        
+        self._start_ticks = pygame.time.get_ticks() 
 
     def drawBackground(self, width , height):
         # self.screen.fill(self.colors[0])
@@ -65,28 +65,45 @@ class Renderer:
         background = pygame.image.load("assets\images\Background.png").convert()
         background = pygame.transform.scale(background, (width,height))
         self.screen.blit(background, (0, 0))
-    def drawItems(self, items):
-        pass
-    def drawUi(self, score):
-        card_x, card_y = 30, 24
-        card_w, card_h = 200, 100
- 
-        card_surf = pygame.Surface((card_w, card_h), pygame.SRCALPHA)
-        pygame.draw.rect(card_surf, self.colors[0], (0, 0, card_w, card_h), border_radius=16)
-        # Border
-        pygame.draw.rect(card_surf, self.colors[1],  (0, 0, card_w, card_h), border_radius=16, width=2)
-        self.screen.blit(card_surf, (card_x, card_y))
- 
-        # "SCORE" label
-        label = self.font_label.render("SCORE", True, self.colors[2])
-        self.screen.blit(label, (card_x + 14, card_y + 10))
- 
-        # Score number
-        score_surf = self.font_score.render(str(score), True, self.colors[2])
-        nx = card_x + (card_w - score_surf.get_width()) // 2
-        ny = card_y + 30
-        self.screen.blit(score_surf, (nx, ny))
 
+    def _fmt_time(self):
+        secs = (pygame.time.get_ticks() - self._start_ticks) // 1000
+        return f"{secs // 60}:{secs % 60:02d}"
+
+    def _items_left(self, level):
+        if level is None:
+            return "-"
+        return str(level.total_items - level.items_done)
+
+    def _draw_section(self, x, y, w, label, value, divider=True):
+       
+        if divider:
+            pygame.draw.line(self.screen, (0, 0, 0), (x, y), (x + w, y), 2)
+
+        # label
+        lbl = self.font_label.render(label, True, (0, 0, 0))
+        self.screen.blit(lbl, (x + 10, y + 15))
+        
+        # value
+        val = self.font_score.render(value, True, (0, 0, 0))
+        self.screen.blit(val, (x + 10, y + 35))
+
+    def drawUi(self, score, level=None):
+        row_h = 90   
+        panel_w = 120 
+        panel_x, panel_y = 1060, 90
+
+        sections = [
+            ("SCORE", str(score)),
+            ("TIME",  self._fmt_time()),
+            ("LEFT",  self._items_left(level)),
+        ]
+
+       
+        for i, (label, value) in enumerate(sections):
+            sy = panel_y + i * row_h
+            self._draw_section(panel_x, sy, panel_w, label, value, divider=(i > 0))
+            
     def showPopUp(self, x, y, popup_type):
         text = choice(POPUP_PHRASES.get(popup_type, ["..."]))
         self._popups.append([x, y, text, popup_type, 20])  # 90 frames duration
@@ -120,6 +137,6 @@ class Renderer:
         if active_items:
             active_items.draw(self.screen)
         
-        self.drawUi(score)
+        self.drawUi(score, level=level)
         self._draw_popups()
         pygame.display.flip()
