@@ -1,13 +1,13 @@
 import cv2
 import pygame
 
-HAND_IMAGE_PATH = r"E:\pygame\Grip-Fruit\src\assets\images\hand.png"
+HAND_IMAGE_PATH = r"src\assets\images\hand.png"
 HAND_SIZE = 150
 
 SQUEEZE_VIDEO_PATHS = {
-    "fresh_fruit":  r"E:\pygame\Grip-Fruit\src\assets\animated videos\animated lemon.mp4",
-    "rotten_fruit": r"E:\pygame\Grip-Fruit\src\assets\animated videos\animated rotten fruit.mp4",
-    "ketchup":      r"E:\pygame\Grip-Fruit\src\assets\animated videos\animated ketchup.mp4",
+    "fresh_fruit":  r"src\assets\animated videos\animated lemon.mp4",
+    "rotten_fruit": r"src\assets\animated videos\animated rotten fruit.mp4",
+    "ketchup":      r"src\assets\animated videos\animated ketchup.mp4",
 }
 
 STILL = "still"
