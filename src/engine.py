@@ -1,7 +1,7 @@
 import pygame
 from random import choice
 from hand import Hand
-from item import STILL_IMAGE_PATHS, FruitItem, FRESH_FRUIT, ITEM_SIZE
+from item import STILL_IMAGE_PATHS, FruitItem, FRESH_FRUIT, ROTTEN_FRUIT, KETCHUP, ITEM_SIZE
 from levelManager import make_challenge_level, make_warmup_level
 from renderer import Renderer
 from scoreManger import ScoreManager
@@ -44,7 +44,8 @@ def create_dummy_item(screen_w, screen_h):
 if __name__ == "__main__":
     settings = config()
     renderer, clock, score_manager,hand, level, currentItem  = initialize(settings["width"],settings["height"])
-    img_data = {name: pygame.image.load(path).convert_alpha() for name, path in STILL_IMAGE_PATHS.items()}
+    # img_data = {name: pygame.image.load(path).convert_alpha() for name, path in STILL_IMAGE_PATHS.items()}
+    img_data = {FRESH_FRUIT: None, ROTTEN_FRUIT: None, KETCHUP: None}
     hand_y = settings["height"] - 120
     running = True
     
@@ -86,6 +87,7 @@ if __name__ == "__main__":
         if shouldSpawn:
             itemType = level.next_item_type()
             currentItem = FruitItem(itemType, img_data[itemType], settings["width"], hand_y, ITEM_SIZE)
+            hand.set_fruit(itemType)
 
         hand.update_hand()
         renderer.render_frame(

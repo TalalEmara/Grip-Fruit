@@ -1,56 +1,51 @@
-import cv2
 import pygame
+import os
 
-HAND_IMAGE_PATH = r"src\assets\images\hand.png"
-HAND_SIZE = 150
+HAND_SIZE = 350
 
-SQUEEZE_VIDEO_PATHS = {
-    "fresh_fruit":  r"src\assets\animated videos\animated lemon.mp4",
-    "rotten_fruit": r"src\assets\animated videos\animated rotten fruit.mp4",
-    "ketchup":      r"src\assets\animated videos\animated ketchup.mp4",
+SQUEEZE_FRAME_DIRS = {
+    "fresh_fruit":  r"src\assets\frames\lemon frames",
+    "rotten_fruit": r"src\assets\frames\rotten frames",
+    "ketchup":      r"src\assets\frames\ketchup frames",
 }
 
 STILL = "still"
 SQUEEZING = "squeezing"
 
 class Hand:
-    def __init__(self, screen_w, screen_h, fruit_rect):
+    def __init__(self, screen_w, screen_h, fruit_rect=None):
         self.size = HAND_SIZE
-        self.still_image = pygame.transform.scale(
-            pygame.image.load(HAND_IMAGE_PATH).convert_alpha(), (self.size, self.size)
-        )
-
         self.all_squeeze_frames = {
-            fruit_type: self._load_frames(path, (self.size, self.size))
-            for fruit_type, path in SQUEEZE_VIDEO_PATHS.items()
+            fruit_type: self._load_frames(folder, (self.size, self.size))
+            for fruit_type, folder in SQUEEZE_FRAME_DIRS.items()
         }
 
-        self.fruit_rect = fruit_rect
         self.rect = pygame.Rect((screen_w - self.size) // 2, screen_h - self.size, self.size, self.size)
 
         self.squeeze_frames = []
         self.current_frame = 0
         self.state = STILL
+        self.current_fruit_type = list(SQUEEZE_FRAME_DIRS.keys())[0]  # default to first
 
-    def _load_frames(self, video_path, size):
-        cap = cv2.VideoCapture(video_path)
+    def _load_frames(self, folder_path, size):
         frames = []
-        while True:
-            success, frame = cap.read()
-            if not success: 
-                break
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = cv2.resize(frame, size)
-            surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
-            surface.set_colorkey((0, 0, 0))
-            frames.append(surface.convert_alpha())
-        cap.release()
+        files = sorted(
+            f for f in os.listdir(folder_path)
+            if f.lower().endswith(".png")
+        )
+        for filename in files:
+            img = pygame.image.load(os.path.join(folder_path, filename)).convert_alpha()
+            img = pygame.transform.scale(img, size)
+            frames.append(img)
         return frames
+
+    def set_fruit(self, fruit_type):
+        self.current_fruit_type = fruit_type
 
     def start_squeezing(self, fruit_type):
         if self.state != STILL: 
             return
-        self.squeeze_frames = self.all_squeeze_frames[fruit_type]
+        self.squeeze_frames = self.all_squeeze_frames[fruit_type][1:]  # skip frame 0
         self.current_frame = 0
         self.state = SQUEEZING
 
@@ -65,6 +60,7 @@ class Hand:
     def draw(self, screen):
         if self.state == SQUEEZING:
             frame = self.squeeze_frames[min(self.current_frame, len(self.squeeze_frames) - 1)]
-            screen.blit(frame, self.fruit_rect)
+            screen.blit(frame, self.rect)
         else:
-            screen.blit(self.still_image, self.rect)
+            still_frame = self.all_squeeze_frames[self.current_fruit_type][0]
+            screen.blit(still_frame, self.rect)

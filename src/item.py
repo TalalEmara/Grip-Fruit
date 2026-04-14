@@ -1,57 +1,39 @@
 import pygame
-import random
-from hand import Hand, STILL, HAND_SIZE
 
 pygame.init()
 
 FRESH_FRUIT, ROTTEN_FRUIT, KETCHUP = "fresh_fruit", "rotten_fruit", "ketchup"
 POINTS = {FRESH_FRUIT: 10, ROTTEN_FRUIT: -10, KETCHUP: -5}
 
-STILL_IMAGE_PATHS = {
-    FRESH_FRUIT:  r"src\assets\images\lemon.png",
-    ROTTEN_FRUIT: r"src\assets\images\lemon rotten.png",
-    KETCHUP:      r"src\assets\images\ketchup.png",
-}
-
-ITEM_SIZE = 150
+STILL_IMAGE_PATHS = {}
+ITEM_SIZE = 200
 
 class FruitItem:
-    def __init__(self, fruit_type, fruit_still_image, screen_w, hand_y, size=150):
+    def __init__(self, fruit_type, fruit_still_image=None, screen_w=0, hand_y=0, size=None):
         self.fruit_type = fruit_type
         self.points = POINTS[fruit_type]
-        self.size = size
-        self.fruit_still_image = pygame.transform.scale(fruit_still_image, (self.size, self.size))
-        
-        self.x = (screen_w - self.size) // 2
-        self.y = hand_y - self.size
-        self.rect = pygame.Rect(self.x, self.y, self.size, self.size)
-        
         self.is_on_screen = True
         self.is_being_squeezed = False
         self.timer = 0
 
     def squeeze(self):
-        if not self.is_on_screen or self.is_being_squeezed: 
+        if not self.is_on_screen or self.is_being_squeezed:
             return 0
         self.is_being_squeezed = True
         return self.points
 
-    def update_fruit(self, timeout=100):   # <-- add param
+    def update_fruit(self, timeout=100):
         if not self.is_on_screen:
             return
         if self.is_being_squeezed:
             self.is_on_screen = False
         else:
             self.timer += 1
-            if self.timer >= timeout:      # <-- use it here
+            if self.timer >= timeout:
                 self.is_on_screen = False
 
     def draw(self, screen):
-        if not self.is_on_screen or self.is_being_squeezed: 
-            return
-        screen.blit(self.fruit_still_image, self.rect)
-
-#Test
+        pass  
 
 # if __name__ == "__main__":
 #     WIDTH, HEIGHT = 600, 700
