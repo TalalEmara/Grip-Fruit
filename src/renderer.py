@@ -1,4 +1,47 @@
+from random import choice
+
 import pygame
+
+POPUP_STYLES = {
+            "perfect":  ((0,   230, 118), (0,   51,  32)),
+            "good":     ((255, 214,   0), (61,  46,   0)),
+            "motivate": ((255, 109,   0), (61,  26,   0)),
+            "penalty":  ((255,  23,  68), (61,   0,  16)),
+        }
+
+
+POPUP_PHRASES = {
+    "perfect":  [
+        "Perfect!", 
+        "Beautiful movement!", 
+        "Excellent control!", 
+        "Spot on!", 
+        "Outstanding!", 
+        "Just right!"
+    ],
+    "good":     [
+        "Good job!", 
+        "Nice work!", 
+        "Well done!", 
+        "Keep it up!", 
+        "Great effort!", 
+        "That's the way!"
+    ],
+    "motivate": [
+        "Take your time.", 
+        "You're doing great!", 
+        "Keep going!", 
+        "Every squeeze helps!", 
+        "You've got this!"
+    ],
+    "penalty":  [
+        "Oops, let's try again!", 
+        "Careful there!", 
+        "Wait for the fresh fruit!", 
+        "Not quite!", 
+        "Almost!"
+    ],
+}
 class Renderer:
     def __init__(self , width, height):
         self.width = width
@@ -10,11 +53,15 @@ class Renderer:
         self.colors = [(40,200,155),(0,0,0),(0,0,50)]
         self.font_score = pygame.font.SysFont("impact", 58)
         self.font_label = pygame.font.SysFont("arial",  16, bold=True)
- 
+        self.font_popup = pygame.font.SysFont("arial", 32, bold=True)
+        
+        self._popups = []   # list of [x, y, text, type, frames_left]
+
+        
 
     def drawBackground(self, width , height):
         # self.screen.fill(self.colors[0])
-        # Or if using an image:
+
         background = pygame.image.load("assets\images\Background.png").convert()
         background = pygame.transform.scale(background, (width,height))
         self.screen.blit(background, (0, 0))
@@ -39,10 +86,30 @@ class Renderer:
         nx = card_x + (card_w - score_surf.get_width()) // 2
         ny = card_y + 30
         self.screen.blit(score_surf, (nx, ny))
-    def showPopUp(self, text, type):
-        pass
+
+    def showPopUp(self, x, y, popup_type):
+        text = choice(POPUP_PHRASES.get(popup_type, ["..."]))
+        self._popups.append([x, y, text, popup_type, 20])  # 90 frames duration
+
+    def _draw_popups(self):
+        # p is [x, y, text, type, frames_left]
+        for p in self._popups:
+            backG, labelcolor = POPUP_STYLES.get(p[3], POPUP_STYLES["good"])
+            surf = self.font_popup.render(p[2], True, labelcolor)
+            pad, r = 12, 10
+            rect = pygame.Rect(p[0] - surf.get_width()//2 - pad, p[1] - surf.get_height()//2 - pad,
+                            surf.get_width() + pad*2, surf.get_height() + pad*2)
+            pygame.draw.rect(self.screen, backG, rect, border_radius=r)
+            self.screen.blit(surf, (rect.x + pad, rect.y + pad))
+            p[4] -= 1
+        self._popups = [p for p in self._popups if p[4] > 0]
+
+
+
     def showCameraFeed(self):
         pass
+
+
     def render_frame(self,width, height, score = 0,  hand = None, active_items = None, level =None):
         """
         The master method.
@@ -54,5 +121,5 @@ class Renderer:
             active_items.draw(self.screen)
         
         self.drawUi(score)
-        
+        self._draw_popups()
         pygame.display.flip()

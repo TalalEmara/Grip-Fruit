@@ -1,4 +1,5 @@
 import pygame
+from random import choice
 from hand import Hand
 from item import STILL_IMAGE_PATHS, FruitItem, FRESH_FRUIT, ITEM_SIZE
 from levelManager import make_challenge_level, make_warmup_level
@@ -63,6 +64,13 @@ if __name__ == "__main__":
                 compensation_detected = False
                 result = score_manager.process_grip(
                     currentItem.fruit_type == FRESH_FRUIT, compensation_detected
+                )
+
+                renderer.showPopUp(
+                    x=settings["width"] * 2 // 3,
+                    y=settings["height"]* 4 // 5,
+                    # for testing, randomize the popup type. Replace with actual result in real game.
+                    popup_type=choice(["perfect", "good", "motivate", "penalty"]),
                 )
 
         shouldSpawn = level.update(currentItem)
