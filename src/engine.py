@@ -49,7 +49,11 @@ if __name__ == "__main__":
     hand_y = settings["height"] - 120
     running = True
     
-    
+    pygame.mixer.init()
+    pygame.mixer.music.load(r"E:\pygame\Grip-Fruit\src\assets\sound effects\grip fruit background music.mp3")
+    pygame.mixer.music.set_volume(0.4) #sound level
+    pygame.mixer.music.play(-1) #always in loop
+
     # Game loop
     while running:
         squeeze_triggered = False

@@ -25,7 +25,12 @@ class Hand:
         self.squeeze_frames = []
         self.current_frame = 0
         self.state = STILL
-        self.current_fruit_type = list(SQUEEZE_FRAME_DIRS.keys())[0]  # default to first
+        self.current_fruit_type = list(SQUEEZE_FRAME_DIRS.keys())[0]
+
+        pygame.mixer.init()      
+        squeeze_sound_path = r"src\assets\sound effects\fruit squeezing sound.mp3"
+        self.squeeze_sound = pygame.mixer.Sound(squeeze_sound_path)
+        self.squeeze_sound.set_volume(0.8)
 
     def _load_frames(self, folder_path, size):
         frames = []
@@ -45,7 +50,8 @@ class Hand:
     def start_squeezing(self, fruit_type):
         if self.state != STILL: 
             return
-        self.squeeze_frames = self.all_squeeze_frames[fruit_type][1:]  # skip frame 0
+        self.squeeze_sound.play()
+        self.squeeze_frames = self.all_squeeze_frames[fruit_type][1:]
         self.current_frame = 0
         self.state = SQUEEZING
 
@@ -53,6 +59,8 @@ class Hand:
         if self.state != SQUEEZING: 
             return
         self.current_frame += 1
+        if self.current_frame == 6:
+            self.squeeze_sound.stop()
         if self.current_frame >= len(self.squeeze_frames):
             self.state = STILL
             self.current_frame = 0
