@@ -57,6 +57,19 @@ class Renderer:
         
         self._popups = []   # list of [x, y, text, type, frames_left]
 
+        pygame.mixer.init()
+        self.phrase_sounds = {}
+        sound_dir = r"src\assets\sound effects\popup phrases sound"
+
+        for category in POPUP_PHRASES:
+            for phrase in POPUP_PHRASES[category]:
+                path = f"{sound_dir}\\{phrase}.mp3"
+                try:
+                    self.phrase_sounds[phrase] = pygame.mixer.Sound(path)
+                    self.phrase_sounds[phrase].set_volume(0.4)
+                except:
+                    print(f"Warning: Sound file not found for phrase: {phrase}")
+
         self._start_ticks = pygame.time.get_ticks() 
 
     def drawBackground(self, width , height):
@@ -107,6 +120,9 @@ class Renderer:
     def showPopUp(self, x, y, popup_type):
         text = choice(POPUP_PHRASES.get(popup_type, ["..."]))
         self._popups.append([x, y, text, popup_type, 20])  # 90 frames duration
+
+        if text in self.phrase_sounds:
+            self.phrase_sounds[text].play()
 
     def _draw_popups(self):
         # p is [x, y, text, type, frames_left]

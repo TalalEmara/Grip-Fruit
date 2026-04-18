@@ -30,7 +30,7 @@ class Hand:
         pygame.mixer.init()      
         squeeze_sound_path = r"src\assets\sound effects\fruit squeezing sound.mp3"
         self.squeeze_sound = pygame.mixer.Sound(squeeze_sound_path)
-        self.squeeze_sound.set_volume(0.8)
+        self.squeeze_sound.set_volume(0.9)
 
     def _load_frames(self, folder_path, size):
         frames = []
