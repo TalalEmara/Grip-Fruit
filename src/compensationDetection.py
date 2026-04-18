@@ -129,6 +129,48 @@ class compensationDetection:
         cv2.destroyAllWindows()
         self.holistic.close()
 
+    def update_feed(self):
+        if self.cap.isOpened():
+            self.cap.grab()
+
+    def check_for_compensation(self):
+      if not self.cap.isOpened():
+            return False
+
+        ret, frame = self.cap.retrieve()
+        if not ret:
+            return False
+
+        h, w, _ = frame.shape
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.holistic.process(image)
+
+        self.compensation_detected = False
+
+        if results.pose_landmarks:
+            lm = results.pose_landmarks
+
+            # LEFT
+            ls = self.get_landmark_coords(lm, 11, w, h)
+            le = self.get_landmark_coords(lm, 13, w, h)
+            lw = self.get_landmark_coords(lm, 15, w, h)
+            left_angle = self.calculate_angle(ls, le, lw)
+
+            # RIGHT
+            rs = self.get_landmark_coords(lm, 12, w, h)
+            re = self.get_landmark_coords(lm, 14, w, h)
+            rw = self.get_landmark_coords(lm, 16, w, h)
+            right_angle = self.calculate_angle(rs, re, rw)
+
+            self.detect_compensation(left_angle, right_angle)
+
+        return self.compensation_detected
+
+    def cleanup(self):
+        self.cap.release()
+        self.holistic.close()
+
+
 if __name__ == "__main__":
     detector = compensationDetection()
     detector.start()
