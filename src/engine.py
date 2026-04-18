@@ -2,7 +2,7 @@ import pygame
 from random import choice
 from hand import Hand
 from item import STILL_IMAGE_PATHS, FruitItem, FRESH_FRUIT, ROTTEN_FRUIT, KETCHUP, ITEM_SIZE
-from levelManager import make_challenge_level, make_warmup_level
+from levelManager import make_challenge_level, make_standard_level, make_warmup_level
 from renderer import Renderer
 from scoreManger import ScoreManager
 from inputHandler import InputHandler
@@ -23,7 +23,7 @@ def initialize(width, height):
 
     score_manager = ScoreManager()
 
-    level = make_challenge_level()
+    level = make_standard_level()
     level.start()
     renderer._start_ticks = pygame.time.get_ticks()
     hand_y = height - 120
@@ -52,18 +52,18 @@ if __name__ == "__main__":
     running = True
     
     pygame.mixer.init()
-    pygame.mixer.music.load(r"E:\pygame\Grip-Fruit\src\assets\sound effects\grip fruit background music.mp3")
+    pygame.mixer.music.load(r"src\assets\sound effects\grip fruit background music.mp3")
     pygame.mixer.music.set_volume(0.4) #sound level
     pygame.mixer.music.play(-1) #always in loop
 
     # Game loop
     while running:
-        # squeeze_triggered = False
-        # for event in pygame.event.get():
-        #     if event.type == pygame.QUIT:
-        #         running = False
-        #     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-        #         squeeze_triggered = True
+        squeeze_triggered = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                squeeze_triggered = True
 
         input_handler.update()
         if not input_handler.running:
@@ -80,11 +80,18 @@ if __name__ == "__main__":
                     currentItem.fruit_type == FRESH_FRUIT, compensation_detected
                 )
 
+                event_to_popup = {
+                    "score_perfect":        "good",
+                    "score_perfect_streak": "perfect",
+                    "score_compensated":    "motivate",
+                    "penalty_wrong_object": "penalty",
+                }
+                popup_type = event_to_popup.get(result["event_type"], "good")
+ 
                 renderer.showPopUp(
-                    x=settings["width"] * 2 // 3,
-                    y=settings["height"]* 4 // 5,
-                    # for testing, randomize the popup type. Replace with actual result in real game.
-                    popup_type=choice(["perfect", "good", "motivate", "penalty"]),
+                    x=settings["width"]  * 2 // 3,
+                    y=settings["height"] * 4 // 5,
+                    popup_type=popup_type,
                 )
         
         if currentItem:

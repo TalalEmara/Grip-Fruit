@@ -170,7 +170,7 @@ def make_challenge_level() -> LevelManager:
         item_timeout  = 60,    # only ~1 second at 60 fps
         spawn_delay   = 30,
         sequence_mode = RANDOM,
-        fresh_weight  = 0.45,
-        rotten_weight = 0.35,
+        fresh_weight  = 0.55,
+        rotten_weight = 0.25,
         ketchup_weight= 0.20,
     )
