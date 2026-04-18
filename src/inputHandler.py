@@ -2,7 +2,7 @@ import pygame
 import serial
 
 class InputHandler:
-    def __init__(self, serial_port='COM3', baudrate=9600):
+    def __init__(self, serial_port='COM10', baudrate=9600):
         self.squeeze_triggered = False
         self.running = True
         self.ser = None

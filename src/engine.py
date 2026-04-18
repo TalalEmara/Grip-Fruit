@@ -5,7 +5,7 @@ from item import STILL_IMAGE_PATHS, FruitItem, FRESH_FRUIT, ROTTEN_FRUIT, KETCHU
 from levelManager import make_challenge_level, make_warmup_level
 from renderer import Renderer
 from scoreManger import ScoreManager
-
+from inputHandler import InputHandler
 
 def config():
     configuration = {
@@ -44,6 +44,8 @@ def create_dummy_item(screen_w, screen_h):
 if __name__ == "__main__":
     settings = config()
     renderer, clock, score_manager,hand, level, currentItem  = initialize(settings["width"],settings["height"])
+    input_handler = InputHandler(serial_port='COM10', baudrate=9600)
+
     # img_data = {name: pygame.image.load(path).convert_alpha() for name, path in STILL_IMAGE_PATHS.items()}
     img_data = {FRESH_FRUIT: None, ROTTEN_FRUIT: None, KETCHUP: None}
     hand_y = settings["height"] - 120
@@ -56,12 +58,18 @@ if __name__ == "__main__":
 
     # Game loop
     while running:
-        squeeze_triggered = False
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                squeeze_triggered = True
+        # squeeze_triggered = False
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         running = False
+        #     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+        #         squeeze_triggered = True
+
+        input_handler.update()
+        if not input_handler.running:
+            running = False
+            
+        squeeze_triggered = input_handler.squeeze_triggered
 
         if squeeze_triggered:
             if currentItem and currentItem.is_on_screen and not currentItem.is_being_squeezed:
@@ -103,5 +111,6 @@ if __name__ == "__main__":
             level=level,
         )
     clock.tick(settings["fps"])
+    input_handler.close()
     pygame.quit()
 
