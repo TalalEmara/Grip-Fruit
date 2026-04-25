@@ -65,6 +65,9 @@ class ScoreManager:
             "current_streak": self.streak
         }
 
+    def get_stats(self):
+        return self.stats
+
     def get_clinical_summary(self) -> dict:
         """
         Returns a summary of the session data.

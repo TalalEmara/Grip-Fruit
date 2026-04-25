@@ -1,11 +1,18 @@
 import pygame
+import json
+from datetime import datetime, timezone
+from pathlib import Path
 from random import choice
 from hand import Hand
 from item import STILL_IMAGE_PATHS, FruitItem, FRESH_FRUIT, ROTTEN_FRUIT, KETCHUP, ITEM_SIZE
-from levelManager import make_challenge_level, make_standard_level, make_warmup_level
+from levelManager import LevelManager, make_challenge_level, make_standard_level, make_warmup_level
 from renderer import Renderer
 from scoreManger import ScoreManager
 from inputHandler import InputHandler
+from startScreen import StartScreen
+from EndScreen import show_end_screen
+from experimentPickerScreen import ExperimentPickerScreen
+
 
 def config():
     configuration = {
@@ -16,18 +23,34 @@ def config():
     return configuration
 
 
-def initialize(width, height):
+def initialize(width, height, level_difficulty):
     pygame.init()
     renderer = Renderer(width, height)
     clock = pygame.time.Clock()
 
     score_manager = ScoreManager()
 
-    level = make_standard_level()
+    if level_difficulty["name"] == "EASY":
+        level = make_warmup_level()
+    elif level_difficulty["name"] == "MEDIUM":
+        level = make_standard_level()
+    elif level_difficulty["name"] == "HARD":
+        level = make_challenge_level()
+    elif level_difficulty["name"] == "CUSTOM":
+        level = LevelManager(
+            level_id=4,
+            level_name="Custom",
+            item_timeout=level_difficulty["item_timeout"],
+            spawn_delay=level_difficulty["spawn_delay"],
+            total_items=level_difficulty["total_items"],
+        )
+    else:
+        level = make_standard_level()
+
     level.start()
     renderer._start_ticks = pygame.time.get_ticks()
     hand_y = height - 120
-    fruit_rect = pygame.Rect((settings["width"] - ITEM_SIZE) // 2, hand_y - ITEM_SIZE, ITEM_SIZE, ITEM_SIZE)
+    fruit_rect = pygame.Rect((width - ITEM_SIZE) // 2, hand_y - ITEM_SIZE, ITEM_SIZE, ITEM_SIZE)
     hand = Hand(width, height, fruit_rect)
     currentItem = None
     return renderer, clock, score_manager,hand, level, currentItem
@@ -41,9 +64,8 @@ def create_dummy_item(screen_w, screen_h):
     return FruitItem(FRESH_FRUIT, dummy_surface, screen_w, hand_y, ITEM_SIZE)
 
 
-if __name__ == "__main__":
-    settings = config()
-    renderer, clock, score_manager,hand, level, currentItem  = initialize(settings["width"],settings["height"])
+def game_loop(settings, level_difficulty):
+    renderer, clock, score_manager,hand, level, currentItem  = initialize(settings["width"],settings["height"], level_difficulty)
     input_handler = InputHandler(serial_port='COM3', baudrate=9600)
 
     # img_data = {name: pygame.image.load(path).convert_alpha() for name, path in STILL_IMAGE_PATHS.items()}
@@ -58,13 +80,7 @@ if __name__ == "__main__":
 
     # Game loop
     while running:
-        squeeze_triggered = False
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                squeeze_triggered = True
-
+        # InputHandler handles both keyboard Space and serial squeeze input.
         input_handler.update()
         if not input_handler.running:
             running = False
@@ -101,6 +117,10 @@ if __name__ == "__main__":
 
         if currentItem and not currentItem.is_on_screen:
             currentItem = None          # clear slot after level.update() counts it
+
+        if level.is_complete and currentItem is None:
+            running = False
+            continue
         
         
         if shouldSpawn:
@@ -117,7 +137,67 @@ if __name__ == "__main__":
             hand=hand,
             level=level,
         )
-    clock.tick(settings["fps"])
+        clock.tick(settings["fps"])
+    
     input_handler.close()
+    return score_manager.get_clinical_summary()
+
+
+def save_summary_json(summary, level_difficulty):
+    experiments_dir = Path(__file__).resolve().parent.parent / "data" / "experiments"
+    experiments_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    file_path = experiments_dir / f"exp-{timestamp}.json"
+    suffix = 1
+    while file_path.exists():
+        file_path = experiments_dir / f"exp-{timestamp}-{suffix}.json"
+        suffix += 1
+
+    payload = {
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "difficulty": level_difficulty,
+        "summary": summary,
+    }
+    file_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return str(file_path)
+
+
+if __name__ == "__main__":
+    settings = config()
+    
+    while True:
+        pygame.init()
+        picker = ExperimentPickerScreen(settings["width"], settings["height"])
+        selection_type, selected_summary = picker.run()
+        pygame.quit()
+
+        if selection_type == "quit":
+            break
+
+        if selection_type == "saved":
+            pygame.init()
+            screen = pygame.display.set_mode((settings["width"], settings["height"]))
+            action = show_end_screen(screen, selected_summary)
+            pygame.quit()
+            if action == "quit":
+                break
+            continue
+
+        start_screen = StartScreen()
+        level_difficulty = start_screen.run()
+        if not level_difficulty:
+            continue
+
+        summary = game_loop(settings, level_difficulty)
+        saved_path = save_summary_json(summary, level_difficulty)
+        print(f"Experiment summary saved to: {saved_path}")
+
+        screen = pygame.display.set_mode((settings["width"], settings["height"]))
+        action = show_end_screen(screen, summary)
+        if action == "quit":
+            break
+    
     pygame.quit()
+
 

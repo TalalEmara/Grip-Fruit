@@ -33,9 +33,9 @@ class LevelManager:
         spawn_delay:   int   = 60,    # frames  (~1.00 s at 60 fps)
         sequence_mode: str   = RANDOM,
         sequence:      list  = None,
-        fresh_weight:  float = 0.60,
-        rotten_weight: float = 0.25,
-        ketchup_weight: float = 0.15,
+        fresh_weight:  float = 0.70,
+        rotten_weight: float = 0.20,
+        ketchup_weight: float = 0.10,
     ):
         
         self.level_id   = level_id
