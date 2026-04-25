@@ -35,7 +35,7 @@ class compensationDetection:
 
     def draw_feedback(self, image, point, angle, label):
         TARGET = 90
-        MARGIN = 15
+        MARGIN = 40
 
         deviation = abs(angle - TARGET)
         in_range = deviation <= MARGIN
@@ -58,7 +58,7 @@ class compensationDetection:
         Example: if any elbow is out of range.
         """
         TARGET = 90
-        MARGIN = 15
+        MARGIN = 40
 
         left_ok = abs(left_angle - TARGET) <= MARGIN
         right_ok = abs(right_angle - TARGET) <= MARGIN
@@ -134,8 +134,8 @@ class compensationDetection:
             self.cap.grab()
 
     def check_for_compensation(self):
-      if not self.cap.isOpened():
-            return False
+        if not self.cap.isOpened():
+                return False
 
         ret, frame = self.cap.retrieve()
         if not ret:

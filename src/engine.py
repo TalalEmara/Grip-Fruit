@@ -44,7 +44,7 @@ def create_dummy_item(screen_w, screen_h):
 if __name__ == "__main__":
     settings = config()
     renderer, clock, score_manager,hand, level, currentItem  = initialize(settings["width"],settings["height"])
-    input_handler = InputHandler(serial_port='COM10', baudrate=9600)
+    input_handler = InputHandler(serial_port='COM3', baudrate=9600)
 
     # img_data = {name: pygame.image.load(path).convert_alpha() for name, path in STILL_IMAGE_PATHS.items()}
     img_data = {FRESH_FRUIT: None, ROTTEN_FRUIT: None, KETCHUP: None}
