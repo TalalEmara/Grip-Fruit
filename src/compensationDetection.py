@@ -130,45 +130,68 @@ class compensationDetection:
         self.holistic.close()
 
     def update_feed(self):
-        if self.cap.isOpened():
-            self.cap.grab()
-
-    def check_for_compensation(self):
+        """Grab a frame, annotate it with pose/compensation info, and display it."""
         if not self.cap.isOpened():
-                return False
+            return
 
-        ret, frame = self.cap.retrieve()
+        ret, frame = self.cap.read()
         if not ret:
-            return False
+            return
+
+        # Keep a copy of the raw frame so check_for_compensation can reuse it
+        self._last_frame = frame.copy()
 
         h, w, _ = frame.shape
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.holistic.process(image)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        self.compensation_detected = False
+        # Cache results for check_for_compensation
+        self._last_results = results
 
         if results.pose_landmarks:
+            self.mp_drawing.draw_landmarks(
+                image, results.pose_landmarks, self.mp_holistic.POSE_CONNECTIONS
+            )
+
             lm = results.pose_landmarks
 
-            # LEFT
             ls = self.get_landmark_coords(lm, 11, w, h)
             le = self.get_landmark_coords(lm, 13, w, h)
-            lw = self.get_landmark_coords(lm, 15, w, h)
-            left_angle = self.calculate_angle(ls, le, lw)
+            lw_coord = self.get_landmark_coords(lm, 15, w, h)
+            left_angle = self.calculate_angle(ls, le, lw_coord)
+            self.draw_feedback(image, le, left_angle, "L-Elbow")
 
-            # RIGHT
             rs = self.get_landmark_coords(lm, 12, w, h)
             re = self.get_landmark_coords(lm, 14, w, h)
-            rw = self.get_landmark_coords(lm, 16, w, h)
-            right_angle = self.calculate_angle(rs, re, rw)
+            rw_coord = self.get_landmark_coords(lm, 16, w, h)
+            right_angle = self.calculate_angle(rs, re, rw_coord)
+            self.draw_feedback(image, re, right_angle, "R-Elbow")
 
             self.detect_compensation(left_angle, right_angle)
 
+            if self.compensation_detected:
+                cv2.putText(image, "COMPENSATION DETECTED!",
+                            (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                            1.0, (0, 0, 255), 3)
+            else:
+                cv2.putText(image, "Position OK",
+                            (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                            1.0, (0, 200, 0), 3)
+        else:
+            cv2.putText(image, "No pose detected",
+                        (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                        1.0, (0, 165, 255), 3)
+
+        cv2.imshow("Compensation Detection", image)
+        cv2.waitKey(1)  # non-blocking — keeps the window responsive
+
+    def check_for_compensation(self):
+        """Return compensation state from the most-recently processed frame."""
+        # update_feed() already computed & cached the result — just return it.
         return self.compensation_detected
 
-    def cleanup(self):
-        self.cap.release()
-        self.holistic.close()
+
 
 
 if __name__ == "__main__":
