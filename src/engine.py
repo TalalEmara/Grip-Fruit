@@ -12,6 +12,7 @@ from inputHandler import InputHandler
 from startScreen import StartScreen
 from EndScreen import show_end_screen
 from experimentPickerScreen import ExperimentPickerScreen
+from compensationDetection import compensationDetection
 
 
 def config():
@@ -68,6 +69,9 @@ def game_loop(settings, level_difficulty):
     renderer, clock, score_manager,hand, level, currentItem  = initialize(settings["width"],settings["height"], level_difficulty)
     input_handler = InputHandler(serial_port='COM3', baudrate=9600)
 
+    # Compensation detection — camera opened once for the whole session
+    comp_detector = compensationDetection(camera_index=0)
+
     # img_data = {name: pygame.image.load(path).convert_alpha() for name, path in STILL_IMAGE_PATHS.items()}
     img_data = {FRESH_FRUIT: None, ROTTEN_FRUIT: None, KETCHUP: None}
     hand_y = settings["height"] - 120
@@ -80,6 +84,10 @@ def game_loop(settings, level_difficulty):
 
     # Game loop
     while running:
+        # Grab a camera frame every tick (non-blocking) so check_for_compensation
+        # always has a fresh frame ready the moment a squeeze fires.
+        comp_detector.update_feed()
+
         # InputHandler handles both keyboard Space and serial squeeze input.
         input_handler.update()
         if not input_handler.running:
@@ -91,7 +99,8 @@ def game_loop(settings, level_difficulty):
             if currentItem and currentItem.is_on_screen and not currentItem.is_being_squeezed:
                 hand.start_squeezing(currentItem.fruit_type)
                 currentItem.squeeze()
-                compensation_detected = False
+                # Check compensation only at the moment of the squeeze
+                compensation_detected = comp_detector.check_for_compensation()
                 result = score_manager.process_grip(
                     currentItem.fruit_type == FRESH_FRUIT, compensation_detected
                 )
@@ -117,6 +126,8 @@ def game_loop(settings, level_difficulty):
 
         if currentItem and not currentItem.is_on_screen:
             currentItem = None          # clear slot after level.update() counts it
+            # Reset detector state now that the item has been passed/expired
+            comp_detector.compensation_detected = False
 
         if level.is_complete and currentItem is None:
             running = False
@@ -140,6 +151,7 @@ def game_loop(settings, level_difficulty):
         clock.tick(settings["fps"])
     
     input_handler.close()
+    comp_detector.cleanup()
     return score_manager.get_clinical_summary()
 
 
